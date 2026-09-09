@@ -1,5 +1,0 @@
-[project]
-name = "shadow-ai"
-version = "0.1.0"
-description = "Shadow AI Layer - Prozess-Server fuer das Shadow Node Protocol v1 (JSONL over stdio)"
-requires-python = ">=3.10"

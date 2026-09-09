@@ -22,6 +22,12 @@ from typing import Iterator, Optional
 from shadow_engine.config import DatasetConfig
 from shadow_engine.dataset.cleaning import clean_documents, Deduplicator
 from shadow_engine.dataset.quality import QualityFilter, QualityReport
+from shadow_engine.dataset.loader import (
+    Document,
+    FORMAT_READERS,
+    read_file,
+    iter_files as iter_data_files,
+)
 
 
 @dataclass
@@ -51,7 +57,11 @@ class DataSource(ABC):
 
 
 class LocalDirectorySource(DataSource):
-    """Liest alle .txt/.jsonl-Dateien aus einem Verzeichnis (eigene Daten)."""
+    """Liest alle unterstützten Daten-Dateien aus einem Verzeichnis.
+
+    Unterstützte Formate: .txt, .jsonl, .json, .csv, .parquet (Parquet
+    optional über pyarrow). Alle Reader sind streaming-fähig.
+    """
 
     source_type = "local"
 
@@ -62,22 +72,9 @@ class LocalDirectorySource(DataSource):
     def iter_documents(self) -> Iterator[str]:
         if not self.directory.exists():
             return
-        for path in sorted(self.directory.rglob("*")):
-            if path.suffix == ".txt":
-                yield path.read_text(encoding="utf-8", errors="ignore")
-            elif path.suffix == ".jsonl":
-                with open(path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        try:
-                            obj = json.loads(line)
-                        except json.JSONDecodeError:
-                            continue
-                        text = obj.get(self.jsonl_text_field)
-                        if text:
-                            yield text
+        for path in iter_data_files(self.directory):
+            for doc in read_file(path, text_field=self.jsonl_text_field):
+                yield doc.text
 
 
 class UserSharedSource(DataSource):

@@ -21,6 +21,10 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Optional
 
+from shadow_engine.agents.memory import AgentMemory
+from shadow_engine.agents.tools import ToolRegistry, default_tools
+from shadow_engine.agents.evaluation import ResultEvaluator, EvaluationResult
+
 
 class TaskStatus(str, Enum):
     PENDING = "pending"
@@ -63,12 +67,30 @@ class Agent:
         plan_fn: PlanFn,
         execute_fn: ExecuteFn,
         agent_id: Optional[str] = None,
+        memory: Optional[AgentMemory] = None,
+        tools: Optional[ToolRegistry] = None,
+        evaluator: Optional[ResultEvaluator] = None,
     ):
         self.name = name
         self.agent_id = agent_id or str(uuid.uuid4())
         self.plan_fn = plan_fn
         self.execute_fn = execute_fn
+        self.memory = memory or AgentMemory()
+        self.tools = tools or default_tools()
+        self.evaluator = evaluator or ResultEvaluator()
         self.tasks: dict[str, Task] = {}
+
+    def use_tool(self, name: str, input_text: str) -> Any:
+        """Ruft ein registriertes Werkzeug auf und merkt sich das Ergebnis."""
+        result = self.tools.call(name, input_text)
+        self.memory.push_working({"tool": name, "input": input_text, "result": result})
+        return result
+
+    def evaluate_result(self, result: str, task_description: str, context: Optional[dict] = None) -> EvaluationResult:
+        """Bewertet das eigene Ergebnis und speichert das Feedback."""
+        ev = self.evaluator.evaluate(result, task_description, context or {})
+        self.memory.push_working({"evaluation": ev.__dict__})
+        return ev
 
     def receive_task(self, description: str) -> Task:
         task = Task(task_id=str(uuid.uuid4()), description=description)
@@ -95,9 +117,17 @@ class Agent:
         step_results = []
         try:
             for step in task.plan:
-                step_results.append(self.execute_fn(step, context))
-            task.result = "\n".join(step_results)
-            task.status = TaskStatus.DONE
+                result = self.execute_fn(step, context)
+                step_results.append(result)
+                self.memory.push_working({"step": step, "result": result})
+            task.result = "\n".join(str(r) for r in step_results)
+            # Ergebnisbewertung: falls nicht bestanden, Task als FEHLGESCHLAGEN markieren
+            evaluation = self.evaluate_result(task.result, task.description, context)
+            if not evaluation.passed:
+                task.status = TaskStatus.FAILED
+                task.error = evaluation.feedback
+            else:
+                task.status = TaskStatus.DONE
         except Exception as e:
             task.status = TaskStatus.FAILED
             task.error = str(e)

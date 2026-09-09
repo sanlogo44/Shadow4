@@ -158,18 +158,15 @@ class HardwareDetector:
 
     def _detect_npu(self) -> list[DeviceInfo]:
         """
-        Vorbereitete, aber vendor-agnostische NPU-Erkennung. Konkrete
-        Vendor-SDKs (z. B. Ascend CANN, Intel NPU, Qualcomm QNN) werden
-        hier als optionale Plugins registriert, sobald verfügbar.
+        NPU-Erkennung über das Plugin-System (shadow_engine.hardware.npu).
+        Vendor-SDKs (Apple Neural Engine, Intel OpenVINO, AMD XDNA) werden
+        als Plugins registriert und nur aktiv, falls installiert.
         """
-        devices: list[DeviceInfo] = []
-        if os.environ.get("SHADOW_NPU_DEVICE"):
-            devices.append(DeviceInfo(
-                device_type=DeviceType.NPU, index=0,
-                name=os.environ["SHADOW_NPU_DEVICE"],
-                extra={"source": "env:SHADOW_NPU_DEVICE"},
-            ))
-        return devices
+        try:
+            from shadow_engine.hardware.npu import detect_npu_devices
+            return detect_npu_devices()
+        except Exception:
+            return []
 
 
 def detect_hardware() -> HardwareReport:

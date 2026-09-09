@@ -34,6 +34,14 @@ except ImportError:  # pragma: no cover
     torch = None
 
 
+def _no_grad(func):
+    """Decorator, der torch.no_grad nutzt, falls torch verfügbar ist,
+    sonst ein No-Op. So bleibt das Modul auch ohne torch importierbar."""
+    if _TORCH_AVAILABLE:
+        return torch.no_grad()(func)
+    return func
+
+
 @dataclass
 class TrainStepResult:
     step: int
@@ -132,7 +140,7 @@ class ShadowTrainer:
         self.global_step += 1
         return TrainStepResult(step=self.global_step, loss=out["loss"].item(), learning_rate=lr)
 
-    @torch.no_grad()
+    @_no_grad
     def evaluate(self, eval_batches: Iterable[dict]) -> dict:
         self.model.eval()
         total_loss, n = 0.0, 0

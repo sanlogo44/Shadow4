@@ -20,5 +20,8 @@ dependencies = [
 jax = ["jax>=0.4", "jaxlib>=0.4"]
 dev = ["pytest>=8.0", "pytest-cov>=5.0"]
 
+[project.scripts]
+shadow = "shadow_engine.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["shadow_engine*"]

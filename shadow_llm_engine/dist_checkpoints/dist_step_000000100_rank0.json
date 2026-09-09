@@ -1,0 +1,8 @@
+{
+  "step": 100,
+  "rank": 0,
+  "world_size": 3,
+  "state": {
+    "weights": "shard0"
+  }
+}

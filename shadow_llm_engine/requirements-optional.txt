@@ -1,0 +1,11 @@
+# Optionale Backends -- separat installierbar, ohne Kernmodule zu berühren.
+# JAX-Backend (CPU/GPU/TPU):
+#   pip install -r requirements-optional.txt
+jax>=0.4
+jaxlib>=0.4
+
+# TPU über PyTorch/XLA (nur auf TPU-Hosts sinnvoll installierbar):
+# torch-xla>=2.2
+
+# Für ROCm: torch selbst in der ROCm-Variante installieren, siehe
+# https://pytorch.org/get-started/locally/ (Compute Platform: ROCm)

@@ -1,0 +1,22 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Flutter
+flutter_ui/build/
+flutter_ui/.dart_tool/
+flutter_ui/.flutter-plugins-dependencies
+flutter_ui/.packages
+flutter_ui/.pub-cache/
+flutter_ui/.pub/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Daten
+shadow-data/
+*.db
+*.db-*
+export-*.json

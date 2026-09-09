@@ -1,0 +1,19 @@
+# Shadow LLM Engine -- lokale Entwicklung (CPU, schneller Rebuild-Zyklus)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+RUN pip install --no-cache-dir -e .
+
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8420
+
+CMD ["python", "scripts/serve.py"]

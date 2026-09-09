@@ -1,0 +1,23 @@
+# Shadow LLM Engine -- Server-Deployment mit NVIDIA-CUDA-Unterstützung.
+# Für ROCm: Basis-Image gegen ein ROCm-PyTorch-Image tauschen
+# (z. B. rocm/pytorch:<tag>) und den torch-Install-Schritt entsprechend anpassen.
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3.11-venv python3-pip git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir --upgrade pip \
+    && pip3 install --no-cache-dir -r requirements.txt
+
+COPY . .
+RUN pip3 install --no-cache-dir -e .
+
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8420
+
+CMD ["python3", "scripts/serve.py"]

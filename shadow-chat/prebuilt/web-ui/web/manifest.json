@@ -1,0 +1,11 @@
+{
+    "name": "Shadow",
+    "short_name": "Shadow",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "description": "Shadow Chat — modulare Chat-Oberfläche und Verwaltungsplattform.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false
+}
